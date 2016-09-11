@@ -39,7 +39,7 @@ SQL;
 
 		switch (self::$connParams['scheme']) {
 			case 'mysql':
-				$pkey = self::selectValue($sql2);
+				$pkey = self::selectOne($sql2)['column_name'];
 				break;
 			default:
 				$pkey = self::selectValue($sql);
