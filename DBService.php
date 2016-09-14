@@ -10,7 +10,7 @@ class DBService {
 
 	public static $connParams;
 
-    static function processParams($params) {
+    static private function processParams($params) {
         return array_map(function($item) {
             if (is_bool($item)) {
                 return $item?"true":"false";
@@ -22,7 +22,7 @@ class DBService {
         }, $params);
     }
 
-    static function getPKey($table) {
+    static private function getPKey($table) {
         self::getDB();
 		$pkey = "";
         //postgres
@@ -49,7 +49,7 @@ SQL;
         return !empty($pkey)?$pkey:"item_id";
     }
 
-    static function cleanFields($table, $data) {
+    static private function cleanFields($table, $data) {
         $result = array();
         $cursor = self::getDB()->query("select * from $table where 0 = 1");
         $cols = $cursor->columnCount();
@@ -221,7 +221,7 @@ SQL;
         }
     }
 
-    static function array_column($a, $col) {
+    static private function array_column($a, $col) {
         return array_map(function($item) use ($col) {return $item[$col];}, $a);
     }
 
@@ -254,7 +254,7 @@ SQL;
             if (!empty($to)) {
 //                 $from = date('Y-m-d', strtotime($from));
 //                 $to = strtotime($to);
-                return "($field BETWEEN '$from' AND '$to' + interval '1 day')";
+                return "($field BETWEEN '$from' AND ('$to' + 1))";
 
             } else {
                 return "($field >= '$from')";
