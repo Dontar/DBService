@@ -133,10 +133,10 @@ SQL;
         $values = array_values($data);
         $sql = "INSERT INTO $table (".implode(", ", $fields).") VALUES (".str_repeat("?,", count($values) - 1)."?)";
 
-		if (isset($data[$key]) && $data[$key] !== null) {
-			self::select($sql, $values);
-			return $data[$key];
-		}
+		// if (isset($data[$key]) && $data[$key] !== null) {
+		// 	self::select($sql, $values);
+		// 	return $data[$key];
+		// }
 		switch (self::$connParams['scheme']) {
 			case 'mysql':
 				self::exec($sql, $values);
@@ -144,7 +144,7 @@ SQL;
 			case 'pgsql':
 				return self::selectValue($sql.(!empty($key))?" RETURNING $key":"", $values);
 			default:
-				return self::selectValue($sql, $values);
+				return self::exec($sql, $values);
 		}
     }
 
