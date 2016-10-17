@@ -1,4 +1,76 @@
 <?php
+class FBStatement {
+	public $queryString;
+	/* Methods */
+	public function __construct($prepId) {
+
+	}
+	public function bindColumn ($column ,  &$param ,  $type ,  $maxlen , $driverdata ) {}
+	public function bindParam ( $parameter , &$variable , $data_type = PDO::PARAM_STR, $length, $driver_options) {}
+	public function bindValue (  $parameter , $value , $data_type = PDO::PARAM_STR) {}
+	public function closeCursor () {}
+	public function columnCount () {}
+	public function debugDumpParams ( ) {}
+	public function errorCode ( ) {}
+	public function errorInfo ( ) {}
+	public function execute ( $input_parameters ) {}
+	public function fetch ( $fetch_style , $cursor_orientation = PDO::FETCH_ORI_NEXT , $cursor_offset = 0) {}
+	public function fetchAll ( $fetch_style , $fetch_argument , $ctor_args = array()) {}
+	public function fetchColumn ( $column_number = 0 ) {}
+	public function fetchObject ( $class_name = "stdClass", $ctor_args) {}
+	public function getAttribute (  $attribute ) {}
+	public function getColumnMeta (  $column ) {}
+	public function nextRowset ( ) {}
+	public function rowCount ( ) {}
+	public function setAttribute (  $attribute , $value ) {}
+	public function setFetchMode ( $mode ) {}
+}
+
+class FBPDO {
+	private $dbInstance;
+	private $inTrans;
+	private $lastTrans;
+
+	public function __construct ( $dsn , $username , $password , $options) {
+		$this->dbInstance = ibase_connect($dsn, $username, $password);
+	}
+	public function beginTransaction ( $args ) {
+		$this->lastTrans = ibase_trans($this->dbInstance, $args);
+		return $this->lastTrans;
+	}
+	public function commit ( $transId ) {
+		return ibase_commit($transId || $this->lastTrans);
+	}
+	public function errorCode ( ) {
+		return ibase_errcode();
+	}
+	public function errorInfo (  ) {
+		return ibase_errmsg();
+	}
+	public function exec ( $statement ) {
+		ibase_query($statement);
+		return ibase_affected_rows($this->dbInstance);
+	}
+	public function getAttribute ( $attribute ) {}
+	public static function getAvailableDrivers (  ) {}
+	public function inTransaction ( ) {
+		return $this->inTrans;
+	}
+	public function lastInsertId ($name = NULL) {
+
+	}
+	// PDOStatement
+	public function prepare ( $statement , $driver_options = array() ) {
+		return new FBStatement(ibase_prepare($this->dbInstance));
+	}
+	// PDOStatement
+	public function query ( $statement ) {}
+	public function quote ( $string , $parameter_type = PDO::PARAM_STR ) {}
+	public function rollBack ( ) {}
+	public function setAttribute (  $attribute , $value ) {}
+}
+
+
 class DBService {
     static $dbUrl = "pgsql://postgres:police256@localhost/micsy";
 
