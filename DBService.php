@@ -6,7 +6,7 @@ class FBStatement {
 	private $pdo;
 	/* Methods */
 	public function __construct($stmtId, $resultId, $pdo) {
-		$this->stmt = $stmdId;
+		$this->stmt = $stmtId;
 		$this->result = $resultId;
 		$this->pdo = $pdo;
 	}
@@ -40,11 +40,12 @@ class FBStatement {
 		$this->result = call_user_func_array("ibase_execute", array_merge(array($this->stmt), $input_parameters));
 	}
 	public function fetch ( $fetch_style = 0 , $cursor_orientation = PDO::FETCH_ORI_NEXT , $cursor_offset = 0) {
-		return array_change_key_case(ibase_fetch_assoc($this->result, IABSE_TEXT));
+		$row = ibase_fetch_assoc($this->result, IBASE_TEXT);
+		return is_array($row)?array_change_key_case($row):$row;
 	}
-	public function fetchAll ( $fetch_style , $fetch_argument , $ctor_args = array()) {
+	public function fetchAll ( $fetch_style = null, $fetch_argument = null, $ctor_args = array()) {
 		$result = array ();
-		while(($row = array_change_key_case($this->fetch())) !== false) {
+		while(($row = $this->fetch()) !== false) {
 			$result[] = $row;
 		}
 		return $result;
@@ -75,21 +76,13 @@ class FBPDO {
 
 	private $attrb = array ();
 
-	private function parseDsn($dsn) {
-		$result = array ();
-		$opts = explode(":", $dsn);
-		$opts[1] = explode(";", $opts[1]);
-
-		foreach ($opts[1] as $value) {
-			$t = explode("=", $value);
-			$result[$t[0]] = $t[1];
+	function __construct ( $dsn , $username , $password , $options = null) {
+		if (gettype($dsn) !== 'string') {
+			$this->dbInstance = $dsn;
+		} else {
+			$opts = DBUtils::parseDsn($dsn);
+			$this->dbInstance = ibase_connect($opts['host'].(!empty($opts['port'])?"/".$opts['port']:"").":".$opts['dbname'], $username, $password);
 		}
-		return $result;
-	}
-
-	function __construct ( $dsn , $username , $password , $options) {
-		$opts = $this->parseDsn($dsn);
-		$this->dbInstance = ibase_connect($opts['host'].($opts['port']?"/".$opts['port']:"").":".$opts['dbname'], $username, $password);
 	}
 
 	function __destruct() {
@@ -125,7 +118,7 @@ class FBPDO {
 	}
 	// PDOStatement
 	public function prepare ( $statement , $driver_options = array() ) {
-		return new FBStatement(ibase_prepare($this->dbInstance), null, $this);
+		return new FBStatement(ibase_prepare($this->dbInstance, $statement), null, $this);
 	}
 	// PDOStatement
 	public function query ( $statement ) {
@@ -143,6 +136,30 @@ class FBPDO {
 }
 
 class DBUtils {
+
+	static function fbConnStrToUlr($string, $user = "", $pass = "") {
+		$match = array ();
+		if (preg_match("/(.+?)(\/(\d{2,4}))*\:(.+)/", $string, $match)) {
+			return "firebird://".
+				(!empty($user)?$user.":".$pass."@":"").
+				$match[1].
+				($match[3]?":".$match[3]:"").
+				"/".$match[4];
+		}
+	}
+
+	static function parseDsn($dsn) {
+		$result = array ();
+		$opts = explode(":", $dsn);
+		$opts[1] = explode(";", $opts[1]);
+
+		foreach ($opts[1] as $value) {
+			$t = explode("=", $value);
+			$result[$t[0]] = $t[1];
+		}
+		return $result;
+	}
+
 	static function sqlDate($dbType, $from, $to, $field) {
 		if (!empty($from)) {
 			if (!empty($to)) {
@@ -289,7 +306,7 @@ class DBService {
 		self::$dbInstance->setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_EMPTY_STRING);
 		self::$dbInstance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-		self::$dbInstance->exec("SET NAMES 'UTF8'");
+		// self::$dbInstance->exec("SET NAMES 'UTF8'");
 			// self::getDB()->exec("SELECT set_limit(0.80)");
 	}
 
