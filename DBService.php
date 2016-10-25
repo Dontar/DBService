@@ -87,9 +87,11 @@ class FBPDO {
 	private $inTrans;
 	private $lastTrans;
 
-	private $attrb = array ();
+	private $attrb = array (
+		PDO::ATTR_DRIVER_NAME => "firebird"
+	);
 
-	function __construct ( $dsn , $username , $password , $options = null) {
+	function __construct ( $dsn , $username = null , $password = null , $options = null) {
 		if (gettype($dsn) !== 'string') {
 			$this->dbInstance = $dsn;
 		} else {
@@ -171,6 +173,10 @@ class FBPDO {
 }
 
 class DBUtils {
+
+	static function connFB($string, $user = "", $pass = "") {
+		DBService::setDB(new FBPDO(@ibase_connect($string, $user, $pass)));
+	}
 
 	static function fbConnStrToUlr($string, $user = "", $pass = "") {
 		$match = array ();
@@ -269,7 +275,7 @@ class DBService {
 	*/
 	private static $dbInstance;
 
-	public static $connParams;
+	public static $connParams = array ();
 
 	static private function processParams($params) {
 		return array_map(function($item) {
@@ -356,6 +362,7 @@ class DBService {
 
 	static function setDB($pdo) {
 		self::$dbInstance = $pdo;
+		self::$connParams['scheme'] = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 		self::initDB();
 	}
 
