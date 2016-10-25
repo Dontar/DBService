@@ -108,12 +108,13 @@ class FBPDO {
 	private function handleError() {
 		$code = $this->errorCode();
 		if ($code !== false) {
-			throw new Exception($this->errorInfo, $code);
+			throw new Exception($this->errorInfo(), $code);
 		}
 	}
 
-	public function beginTransaction ( $args ) {
+	public function beginTransaction ( $args = null ) {
 		$this->lastTrans = @ibase_trans($this->dbInstance, $args);
+		$this->handleError();
 		return $this->lastTrans;
 	}
 	public function commit ( $transId ) {
