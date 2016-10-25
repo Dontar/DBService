@@ -174,8 +174,12 @@ class FBPDO {
 
 class DBUtils {
 
-	static function connFB($string, $user = "", $pass = "") {
+	static function connFB($string, $user, $pass) {
 		DBService::setDB(new FBPDO(@ibase_connect($string, $user, $pass)));
+	}
+
+	static function connMySql($host, $dbname, $user, $pass) {
+		DBService::setDB(new PDO("mysql:host=$host;dbname=$dbname", $user, $pass));
 	}
 
 	static function fbConnStrToUlr($string, $user = "", $pass = "") {
