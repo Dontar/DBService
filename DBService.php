@@ -233,7 +233,7 @@ class DBUtils {
 		"firebird" => 'select s.rdb$field_name from rdb$indices i left join rdb$index_segments s on i.rdb$index_name = s.rdb$index_name left join rdb$relation_constraints rc on rc.rdb$index_name = i.rdb$index_name where rc.rdb$constraint_type = \'PRIMARY KEY\' and lower(i.rdb$relation_name) = lower(\'{table}\')'
 	);
 
-	static private function getPKey($dbType, $table) {
+	static function getPKey($dbType, $table) {
 		$pkey = "";
 		$sql = str_replace("{table}", $table, self::$keySql[$dbType]);
 		switch ($dbType) {
