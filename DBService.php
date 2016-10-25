@@ -15,19 +15,26 @@ class FBStatement {
 		$this->closeCursor();
 	}
 
+	private function handleError() {
+		$code = $this->errorCode();
+		if ($code !== false) {
+			throw new Exception($this->errorInfo, $code);
+		}
+	}
+
 	public function bindColumn ($column ,  &$param ,  $type ,  $maxlen , $driverdata ) {}
 	public function bindParam ( $parameter , &$variable , $data_type = PDO::PARAM_STR, $length, $driver_options) {}
 	public function bindValue (  $parameter , $value , $data_type = PDO::PARAM_STR) {}
 	public function closeCursor () {
 		if (!empty($this->stmt)) {
-			ibase_free_query($this->stmt);
+			@ibase_free_query($this->stmt);
 		}
 		if (!empty($this->result)) {
-			ibase_free_result($this->result);
+			@ibase_free_result($this->result);
 		}
 	 }
 	public function columnCount () {
-		return ibase_num_fields($this->stmt);
+		return @ibase_num_fields($this->stmt);
 	}
 	public function debugDumpParams ( ) {}
 	public function errorCode ( ) {
@@ -37,10 +44,13 @@ class FBStatement {
 		return $this->pdo->errorInfo();
 	}
 	public function execute ( $input_parameters ) {
-		$this->result = call_user_func_array("ibase_execute", array_merge(array($this->stmt), $input_parameters));
+		$this->result = @call_user_func_array("ibase_execute", array_merge(array($this->stmt), $input_parameters));
+		$this->handleError();
+		return true;
 	}
 	public function fetch ( $fetch_style = 0 , $cursor_orientation = PDO::FETCH_ORI_NEXT , $cursor_offset = 0) {
-		$row = ibase_fetch_assoc($this->result, IBASE_TEXT);
+		$row = @ibase_fetch_assoc($this->result, IBASE_TEXT);
+		$this->handleError();
 		return is_array($row)?array_change_key_case($row):$row;
 	}
 	public function fetchAll ( $fetch_style = null, $fetch_argument = null, $ctor_args = array()) {
@@ -51,19 +61,22 @@ class FBStatement {
 		return $result;
 	}
 	public function fetchColumn ( $column_number = 0 ) {
-		$row = ibase_fetch_row($this->result, IBASE_TEXT);
+		$row = @ibase_fetch_row($this->result, IBASE_TEXT);
+		$this->handleError();
 		return $row[$column_number];
 	}
 	public function fetchObject ( $class_name = "stdClass", $ctor_args) {
-		return (object)array_change_key_case(ibase_fetch_assoc($this->result, IBASE_TEXT));
+		$result = @ibase_fetch_assoc($this->result, IBASE_TEXT);
+		$this->handleError();
+		return (object)array_change_key_case($result);
 	}
 	public function getAttribute (  $attribute ) {}
 	public function getColumnMeta (  $column ) {
-		return ibase_field_info($this->result, $column);
+		return @ibase_field_info($this->result, $column);
 	}
 	public function nextRowset ( ) {}
 	public function rowCount ( ) {
-		return ibase_affected_rows($this->pdo->dbInstance);
+		return @ibase_affected_rows($this->pdo->dbInstance);
 	}
 	public function setAttribute (  $attribute , $value ) {}
 	public function setFetchMode ( $mode ) {}
@@ -81,30 +94,43 @@ class FBPDO {
 			$this->dbInstance = $dsn;
 		} else {
 			$opts = DBUtils::parseDsn($dsn);
-			$this->dbInstance = ibase_connect($opts['host'].(!empty($opts['port'])?"/".$opts['port']:"").":".$opts['dbname'], $username, $password);
+			$this->dbInstance = @ibase_connect($opts['host'].(!empty($opts['port'])?"/".$opts['port']:"").":".$opts['dbname'], $username, $password);
+			if ($this->dbInstance === false) {
+				$this->handleError();
+			}
 		}
 	}
 
 	function __destruct() {
-		ibase_close($this->dbInstance);
+		@ibase_close($this->dbInstance);
+	}
+
+	private function handleError() {
+		$code = $this->errorCode();
+		if ($code !== false) {
+			throw new Exception($this->errorInfo, $code);
+		}
 	}
 
 	public function beginTransaction ( $args ) {
-		$this->lastTrans = ibase_trans($this->dbInstance, $args);
+		$this->lastTrans = @ibase_trans($this->dbInstance, $args);
 		return $this->lastTrans;
 	}
 	public function commit ( $transId ) {
-		return ibase_commit($transId || $this->lastTrans);
+		$result = @ibase_commit($transId || $this->lastTrans);
+		$this->handleError();
+		return $result;
 	}
 	public function errorCode ( ) {
-		return ibase_errcode();
+		return @ibase_errcode();
 	}
 	public function errorInfo (  ) {
-		return ibase_errmsg();
+		return @ibase_errmsg();
 	}
 	public function exec ( $statement ) {
-		ibase_query($statement);
-		return ibase_affected_rows($this->dbInstance);
+		@ibase_query($statement);
+		$this->handleError();
+		return @ibase_affected_rows($this->dbInstance);
 	}
 	public function getAttribute ( $attribute ) {
 		return $this->attrb[$attribute];
@@ -114,21 +140,27 @@ class FBPDO {
 		return $this->inTrans;
 	}
 	public function lastInsertId ($name = NULL) {
-		return ibase_gen_id($name, 0, $this->dbInstance);
+		return @ibase_gen_id($name, 0, $this->dbInstance);
 	}
 	// PDOStatement
 	public function prepare ( $statement , $driver_options = array() ) {
-		return new FBStatement(ibase_prepare($this->dbInstance, $statement), null, $this);
+		$result = @ibase_prepare($this->dbInstance, $statement);
+		$this->handleError();
+		return new FBStatement($result, null, $this);
 	}
 	// PDOStatement
 	public function query ( $statement ) {
-		return new FBStatement(null, ibase_query($this->dbInstance, $statement), $this);
+		$result = @ibase_query($this->dbInstance, $statement);
+		$this->handleError();
+		return new FBStatement(null, $result, $this);
 	}
 	public function quote ( $string , $parameter_type = PDO::PARAM_STR ) {
 		return "'$string'";
 	}
 	public function rollBack ( ) {
-		return ibase_rollback($this->lastTrans);
+		$result = @ibase_rollback($this->lastTrans);
+		$this->handleError();
+		return $result;
 	}
 	public function setAttribute (  $attribute , $value ) {
 		$this->attrb[$attribute] = $value;
