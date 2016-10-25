@@ -18,7 +18,7 @@ class FBStatement {
 	private function handleError() {
 		$code = $this->errorCode();
 		if ($code !== false) {
-			throw new Exception($this->errorInfo, $code);
+			throw new Exception($this->errorInfo(), $code);
 		}
 	}
 
@@ -26,15 +26,15 @@ class FBStatement {
 	public function bindParam ( $parameter , &$variable , $data_type = PDO::PARAM_STR, $length, $driver_options) {}
 	public function bindValue (  $parameter , $value , $data_type = PDO::PARAM_STR) {}
 	public function closeCursor () {
-		if (!empty($this->stmt)) {
+		if (is_resource($this->stmt)) {
 			@ibase_free_query($this->stmt);
 		}
-		if (!empty($this->result)) {
+		if (is_resource($this->result)) {
 			@ibase_free_result($this->result);
 		}
 	 }
 	public function columnCount () {
-		return @ibase_num_fields($this->stmt);
+		return @ibase_num_fields($this->result);
 	}
 	public function debugDumpParams ( ) {}
 	public function errorCode ( ) {
@@ -112,13 +112,14 @@ class FBPDO {
 		}
 	}
 
-	public function beginTransaction ( $args = null ) {
-		$this->lastTrans = @ibase_trans($this->dbInstance, $args);
+	public function beginTransaction ( $args = IBASE_READ | IBASE_COMMITTED | IBASE_REC_VERSION | IBASE_NOWAIT) {
+		$this->lastTrans = @ibase_trans($args, $this->dbInstance);
 		$this->handleError();
 		return $this->lastTrans;
 	}
-	public function commit ( $transId ) {
-		$result = @ibase_commit($transId || $this->lastTrans);
+	public function commit () {
+		$result = @ibase_commit($this->lastTrans);
+		$this->lastTrans = null;
 		$this->handleError();
 		return $result;
 	}
@@ -160,6 +161,7 @@ class FBPDO {
 	}
 	public function rollBack ( ) {
 		$result = @ibase_rollback($this->lastTrans);
+		$this->lastTrans = null;
 		$this->handleError();
 		return $result;
 	}
@@ -178,6 +180,14 @@ class DBUtils {
 				$match[1].
 				($match[3]?":".$match[3]:"").
 				"/".$match[4];
+		} else if (preg_match("/\/(\d{2,4})\:(.+)/", $string, $match)) {
+			return "firebird://".(!empty($user)?$user.":".$pass."@":"")."localhost".
+				($match[1]?":".$match[1]:"").
+				"/".$match[2];
+		} else {
+			return "firebird://".
+			(!empty($user)?$user.":".$pass."@":"").
+			"localhost/".$string;
 		}
 	}
 
@@ -284,8 +294,9 @@ class DBService {
 		$cols = $cursor->columnCount();
 		for($i = 0;$i < $cols;$i++) {
 			$colMeta = $cursor->getColumnMeta($i);
-			if (array_key_exists($colMeta['name'], $data)) {
-				$result[$colMeta['name']] = $data[$colMeta['name']];
+			$name = strtolower($colMeta['name']);
+			if (array_key_exists($name, $data)) {
+				$result[$name] = $data[$name];
 			}
 		}
 		return $result;
