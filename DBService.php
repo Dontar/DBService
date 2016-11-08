@@ -44,7 +44,8 @@ class FBStatement {
 		return $this->pdo->errorInfo();
 	}
 	public function execute ( $input_parameters ) {
-		$this->result = @call_user_func_array("ibase_execute", array_merge(array($this->stmt), $input_parameters));
+		array_unshift($input_parameters, $this->stmt);
+		$this->result = @call_user_func_array("ibase_execute", $input_parameters);
 		$this->handleError();
 		return true;
 	}
@@ -265,7 +266,7 @@ class DBUtils {
 				break;
 		}
 
-		return !empty($pkey)?$pkey:"item_id";
+		return !empty($pkey)?strtolower(trim($pkey)):"item_id";
 	}
 }
 
@@ -285,6 +286,9 @@ class DBService {
 		return array_map(function($item) {
 			if (is_bool($item)) {
 				return $item?"true":"false";
+			}
+			if (is_string($item) && $item == "null") {
+				return null;
 			}
 			if (is_string($item)) {
 				return strlen($item) > 0?$item:null;
@@ -371,8 +375,9 @@ class DBService {
 	}
 
 	static function insertOrUpdate($table, $data) {
+		$data = self::processParams($data);
 		$key = self::getPKey($table);
-		if (isset($data[$key])) {
+		if (isset($data[$key]) && $data[$key] !== null) {
 			self::update($table, $data);
 			return $data[$key];
 		}
@@ -381,7 +386,7 @@ class DBService {
 
 	static function insert($table, $data) {
 		$key = self::getPKey($table);
-		// unset($data[$key]);
+		unset($data[$key]);
 		$data = self::cleanFields($table, $data);
 		$fields = array_keys($data);
 		// $values = array_map(function($item) {return !empty($item)?$item:null;}, array_values($data));
@@ -396,8 +401,9 @@ class DBService {
 			case 'mysql':
 				self::exec($sql, $values);
 				return (!empty($key))?self::selectValue("SELECT LAST_INSERT_ID()"):0;
+			case 'firebird':
 			case 'pgsql':
-				return self::selectValue($sql.(!empty($key))?" RETURNING $key":"", $values);
+				return self::selectValue($sql.(!empty($key)?" RETURNING $key":""), $values);
 			default:
 				return self::exec($sql, $values);
 		}
