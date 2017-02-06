@@ -256,11 +256,16 @@ class DBUtils {
 
 	static function getPKey($dbType, $table) {
 		$pkey = "";
+		$table = str_replace('"', "", $table);
 		$sql = str_replace("{table}", $table, self::$keySql[$dbType]);
 		switch ($dbType) {
 			case 'mysql':
 				$pkey = DBService::selectOne($sql2)['column_name'];
 				break;
+			// case 'firebird':
+			// 	$table = str_replace('"', "", $table);
+			// 	$pkey = DBService::selectValue($sql);
+			// 	break;
 			default:
 				$pkey = DBService::selectValue($sql);
 				break;
