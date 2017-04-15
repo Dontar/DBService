@@ -8,5 +8,6 @@
             "email": "ka@andreew-investment.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "minimum-stability": "stable"
 }
