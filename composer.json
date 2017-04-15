@@ -2,12 +2,12 @@
     "name": "dontar/db-service",
     "description": "Database utilities.",
     "type": "library",
+    "version": "1.0.1",
     "authors": [
         {
             "name": "Kaloyan Arsov",
-            "email": "ka@andreew-investment.com"
+            "email": "kaloyan.arsov@gmail.com"
         }
     ],
-    "require": {},
-    "minimum-stability": "stable"
+    "require": {}
 }
