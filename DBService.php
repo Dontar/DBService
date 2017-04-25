@@ -204,10 +204,10 @@ class DBUtils {
 
 	static function parseDsn($dsn) {
 		$result = array ();
-		$opts = explode(":", $dsn);
-		$opts[1] = explode(";", $opts[1]);
+		$opts = explode(";", $dsn);
+		$opts[0] = explode(":", $opts[0])[1];
 
-		foreach ($opts[1] as $value) {
+		foreach ($opts as $value) {
 			$t = explode("=", $value);
 			$result[$t[0]] = $t[1];
 		}
