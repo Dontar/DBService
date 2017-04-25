@@ -339,7 +339,7 @@ class DBService {
 						$dsn [] = "port=$value";
 						break;
 					case "path" :
-						$value = basename($value);
+						$value = substr($value, 0);
 						$dsn [] = "dbname=$value";
 						break;
 					case "user" :
