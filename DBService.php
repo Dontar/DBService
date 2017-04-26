@@ -354,7 +354,7 @@ class DBService {
 				}
 			}
 			$dsn = $connParams['scheme'].":".implode(";", $dsn);
-			if ($connParams['scheme'] == "firebird") {
+			if ($connParams['scheme'] == "firebird" && !extension_loaded("PDO_Firebird")) {
 				self::setDB(new FBPDO($dsn, $connParams['user'], $connParams['pass']));
 			} else {
 				self::setDB(new PDO($dsn, $connParams['user'], $connParams['pass']));
