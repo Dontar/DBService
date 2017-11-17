@@ -5,7 +5,7 @@ namespace \DB;
 interface ConnectionInterface {
 	/**
 	 * @property string $connectionString
-	 * 
+	 *
 	 */
 
 	/**
@@ -49,8 +49,8 @@ interface ConnectionInterface {
 
 	/**
 	 * Synchronizes the content of $dataRows with the content of $table where $where.
-	 * The comparison is made according to the key field. If key is provided in 
-	 * the $dataRows is updated, if no key is provided in $dataRows the data is inserted, 
+	 * The comparison is made according to the key field. If key is provided in
+	 * the $dataRows is updated, if no key is provided in $dataRows the data is inserted,
 	 * if the key is missing from the data the row is deleted from the table.
 	 *
 	 * @param string $table The table to sync with.
@@ -73,9 +73,9 @@ interface ConnectionInterface {
 	 * 		)
 	 * )
 	 * </code>
-	 * @param string $where The WHERE clause. Only the conditions should be provided without 
-	 * the "where" keyword i.e. "(field1 = 'value') and (field2 = 'value')". 
-	 * @param array $params If $where is provided with placeholders 
+	 * @param string $where The WHERE clause. Only the conditions should be provided without
+	 * the "where" keyword i.e. "(field1 = 'value') and (field2 = 'value')".
+	 * @param array $params If $where is provided with placeholders
 	 * i.e. "(field1 = ?) and (field2 = ?)" this should hold the values of the parameters.
 	 * @return void
 	 */
@@ -107,20 +107,4 @@ interface ConnectionInterface {
 	 * @return mixed|null
 	 */
 	function selectValue(string $query, array $params = null);
-
-	/**
-	 * Executes $query but do not return any result.
-	 *
-	 * @param string $query
-	 * @param array $params
-	 * @return void
-	 */
-	function exec(string $query, array $params = null);
-
-	function beginTransaction();
-
-	function commit();
-
-	function rollback();
-
 }

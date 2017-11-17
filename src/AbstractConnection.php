@@ -2,12 +2,7 @@
 
 namespace \DB;
 
-abstract class AbstractConnection implements ConnectionInterface {
-
-	/**
-	 * @var PDO
-	 */
-	protected $driver;
+abstract class AbstractConnection extends PDO implements ConnectionInterface {
 
 	/**
 	 * @var string
@@ -38,7 +33,7 @@ abstract class AbstractConnection implements ConnectionInterface {
 				default :
 					break;
 			}
-		}		
+		}
 		return $cn['scheme'].":".implode(";", $dsn);
 	}
 
@@ -73,10 +68,6 @@ abstract class AbstractConnection implements ConnectionInterface {
 		return $result;
 	}
 
-	protected function generateInsertSQL(string $table, array $fields) {
-		return "INSERT INTO $table (".implode(", ", $fields).") VALUES (".str_repeat("?,", count($values) - 1)."?)";
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -84,9 +75,8 @@ abstract class AbstractConnection implements ConnectionInterface {
 		$data = $this->cleanFields($table, $data);
 		$params = $this->cleanParams(array_values($data));
 		$fields = array_keys($data);
-		$sql = $this->generateInsertSQL($table, $fields);
-
-		return $this->selectValue($sql, $params);
+		$keyName = $this->getPKey($table);
+		return $this->selectValue("INSERT INTO $table (".implode(", ", $fields).") VALUES (".str_repeat("?,", count($values) - 1)."?) RETURNING $keyName", $params);
 	}
 
 	/**
@@ -116,7 +106,7 @@ abstract class AbstractConnection implements ConnectionInterface {
 	function delete(string $table, $id) {
 		$keyName = $this->getPKey($table);
 		$sql = "delete from $table where $keyName = ?";
-		return $this->exec($sql);
+		return $this->exec($sql, array($id));
 	}
 
 	/**
@@ -136,7 +126,7 @@ abstract class AbstractConnection implements ConnectionInterface {
 	 */
 	function syncData(string $table, array $dataRows, string $where = null, array $params = null) {
 		$keyName = $this->getPKey($table);
-		
+
 		$currentContentSQL = "SELECT $id FROM $table WHERE $where";
 		$currentContent = $this->driver->query($currentContentSQL)->fetchAll(PDO::FETCH_COLUMN);
 		$incomingData = array_map(function($item) use ($keyName) {return $item[$keyName];}, $dataRows);
@@ -159,17 +149,13 @@ abstract class AbstractConnection implements ConnectionInterface {
 		$noSelect = strpos(strtolower($query), 'select') === false;
 		$stmt = null;
 		if (empty($params)) {
-			$stmt = $this->driver->query($noSelect?"select * from $query":$query);
+			$stmt = $this->query($noSelect?"select * from $query":$query);
 		} else {
 			if ($noSelect) {
 				$query = "select * from $query where ".implode(" and ", array_map(function($k) {return "($k = ?)";}, array_keys($params)));
-				$stmt = $this->driver->prepare($query);
-				$stmt->execute($this->cleanParams(array_values($params)));
-				
-			} else {
-				$stmt = $this->driver->prepare($query);
-				$stmt->execute($this->cleanParams($params));
 			}
+			$stmt = $this->prepare($query);
+			$stmt->execute($this->cleanParams($params));
 		}
 		while (($row = $stmt->fetch()) !== false) {
 			yield $row;
@@ -182,9 +168,9 @@ abstract class AbstractConnection implements ConnectionInterface {
 	function selectOne(string $query, array $params = null) {
 		$stmt = null;
 		if (empty($params)) {
-			$stmt = $this->driver->query($query);
+			$stmt = $this->query($query);
 		} else {
-			$stmt = $this->driver->prepare($query);
+			$stmt = $this->prepare($query);
 			$stmt->execute($this->cleanParams($params));
 		}
 		return $stmt->fetch();
@@ -195,9 +181,9 @@ abstract class AbstractConnection implements ConnectionInterface {
 	 */
 	function selectValue(string $query, array $params = null) {
 		if (empty($params)) {
-			return $this->driver->query($query)->fetchColumn();
+			return $this->query($query)->fetchColumn();
 		} else {
-			$stmt = $this->driver->prepare($query);
+			$stmt = $this->prepare($query);
 			$stmt->execute(self::processParams($params));
 			return $stmt->fetchColumn();
 		}
@@ -208,25 +194,13 @@ abstract class AbstractConnection implements ConnectionInterface {
 	 */
 	function exec(string $query, array $params = null) {
 		if (empty($params)) {
-			return $this->driver->exec($query);
+			return $this->exec($query);
 		} else {
-			$stmt = $this->driver->prepare($query);
+			$stmt = $this->prepare($query);
 			return $stmt->execute($params);
 		}
 	}
 
-	function beginTransaction() {
-		return $this->driver->beginTransaction();
-	}
-	
-	function commit() {
-		return $this->driver->commit();
-	}
-	
-	function rollback() {
-		return $this->driver->rollBack();
-	}
-	
 	function sqlDate($from, $to, $field) {
 		if (!empty($from)) {
 			if (!empty($to)) {
