@@ -1,6 +1,6 @@
 <?php
 
-namespace \DB;
+namespace DB;
 
 interface ConnectionInterface {
 	/**
@@ -15,7 +15,7 @@ interface ConnectionInterface {
 	 * @param array $data Data to insert.
 	 * @return integer The generated table ID (the value of the key field).
 	 */
-	function insert(string $table, array $data);
+	function insert($table, array $data);
 
 	/**
 	 * Update $table with $data.
@@ -25,7 +25,7 @@ interface ConnectionInterface {
 	 * @param array $data Data to update with.
 	 * @return integer Number of updated field. Currently only 1 or 0.
 	 */
-	function update(string $table, array $data);
+	function update($table, array $data);
 
 	/**
 	 * Delete from $table.
@@ -35,7 +35,7 @@ interface ConnectionInterface {
 	 * @param mixed $id The key value to delete.
 	 * @return void
 	 */
-	function delete(string $table, $id);
+	function delete($table, array $ids);
 
 	/**
 	 * Inserts or updates $data into $table depending if key field is provided in $data.
@@ -45,7 +45,7 @@ interface ConnectionInterface {
 	 * @param array $data
 	 * @return void
 	 */
-	function merge(string $table, array $data);
+	function merge($table, array $data);
 
 	/**
 	 * Synchronizes the content of $dataRows with the content of $table where $where.
@@ -79,7 +79,7 @@ interface ConnectionInterface {
 	 * i.e. "(field1 = ?) and (field2 = ?)" this should hold the values of the parameters.
 	 * @return void
 	 */
-	function syncData(string $table, array $dataRows, string $where = null, array $params = null);
+	function syncData($table, array $dataRows, $where = null, array $params = null);
 
 	/**
 	 * Executes $query and return Generator with result.
@@ -88,7 +88,7 @@ interface ConnectionInterface {
 	 * @param array $params
 	 * @return \Generator|null
 	 */
-	function select(string $query, array $params = null);
+	function select($query, array $params = null);
 
 	/**
 	 * Executes $query and return only the first row.
@@ -97,7 +97,7 @@ interface ConnectionInterface {
 	 * @param array $params
 	 * @return array|null
 	 */
-	function selectOne(string $query, array $params = null);
+	function selectOne($query, array $params = null);
 
 	/**
 	 * Executes $query and return the first column from the first row.
@@ -106,5 +106,5 @@ interface ConnectionInterface {
 	 * @param array $params
 	 * @return mixed|null
 	 */
-	function selectValue(string $query, array $params = null);
+	function selectValue($query, array $params = null);
 }

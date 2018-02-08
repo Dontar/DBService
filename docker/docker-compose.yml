@@ -6,3 +6,7 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
+    volumes:
+      - '../:/srv/test'
+    ports:
+      - '80:80'

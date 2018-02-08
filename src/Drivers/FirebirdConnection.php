@@ -1,9 +1,9 @@
 <?php
 
 namespace DB\Drivers;
-use DB\Base;
+use DB\Base\Connection;
 
-class FirebirdConnection extends AbstractConnection {
+class FirebirdConnection extends Connection {
 
 	public $db;
 
@@ -45,7 +45,7 @@ SQL;
 		return $result;
 	}
 
-	function exec($query, $params = null) {
+	function exec($query, array $params = null) {
 		$stmt = null;
 		if (empty($params)) {
 			$stmt = ibase_query($this->db, $query);

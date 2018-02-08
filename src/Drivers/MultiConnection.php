@@ -1,6 +1,7 @@
 <?php
 
 namespace DB\Drivers;
+use DB\ConnectionInterface;
 
 class MultiConnection implements ConnectionInterface {
 

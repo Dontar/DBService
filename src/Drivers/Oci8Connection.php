@@ -1,9 +1,9 @@
 <?php
 
 namespace DB\Drivers;
-use DB\Base;
+use DB\Base\Connection;
 
-class Oci8Connection extends AbstractConnection {
+class Oci8Connection extends Connection {
 
 	public $db;
 

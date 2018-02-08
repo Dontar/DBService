@@ -19,7 +19,7 @@ class Factory {
 			return $conn;
 		} else {
 			if ($url = (object)parse_url($conn)) {
-				$className = ucfirst(strtolower($url->scheme))."Connection";
+				$className = "DB\\Drivers\\".ucfirst(strtolower($url->scheme))."Connection";
 				return new $className($conn);
 			}
 		}

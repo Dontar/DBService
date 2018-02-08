@@ -1,9 +1,9 @@
 <?php
 
 namespace DB\Drivers;
-use DB\Base;
+use DB\Base\Connection;
 
-class MysqlConnection extends AbstractConnection {
+class MysqlConnection extends Connection {
 
 	public $db;
 

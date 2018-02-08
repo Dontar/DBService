@@ -1,9 +1,9 @@
 <?php
 
 namespace DB\Drivers;
-use DB\Base;
+use DB\Base\Connection;
 
-class PgsqlConnection extends AbstractConnection {
+class PgsqlConnection extends Connection {
 	function __construct($conn) {
 		$opts = parse_url($conn);
 

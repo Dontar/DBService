@@ -5,9 +5,9 @@ COPY docker/instantclient-sdk-linux.x64-12.2.0.1.0.zip /tmp/
 
 RUN mkdir -m 777 -p /srv/test
 
-COPY src /srv/test/
-COPY test /srv/test/
-COPY vendor /srv/test/
+# COPY src /srv/test/
+# COPY test /srv/test/
+# COPY vendor /srv/test/
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
@@ -31,7 +31,7 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libfbclient2 \
 	&& pecl channel-update pecl.php.net \
 	&& pecl install xdebug-2.5.5 && docker-php-ext-enable xdebug \
-	&&	mkdir -p /opt/oracle \
+	&& mkdir -p /opt/oracle \
 	&& unzip /tmp/instantclient-basiclite-linux.x64-12.2.0.1.0.zip -d /opt/oracle/ \
 	&& unzip /tmp/instantclient-sdk-linux.x64-12.2.0.1.0.zip -d /opt/oracle/ \
 	&& ln -s /opt/oracle/instantclient_12_2/libclntsh.so.12.1 /opt/oracle/instantclient_12_2/libclntsh.so \
@@ -39,7 +39,8 @@ RUN apt-get update \
 	&& echo "/opt/oracle/instantclient_12_2" > /etc/ld.so.conf.d/oracle-instantclient.conf \
 	&& ldconfig \
 	&& echo 'instantclient,/opt/oracle/instantclient_12_2' | pecl install oci8-2.0.12 \
-	&& docker-php-ext-enable oci8
+	&& docker-php-ext-enable oci8 \
+	&& rm -r /var/lib/apt/lists/*
 
 COPY docker/php.ini /usr/local/etc/php/php.ini
 

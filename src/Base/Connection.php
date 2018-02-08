@@ -2,6 +2,8 @@
 
 namespace DB\Base;
 
+use DB\ConnectionInterface;
+
 abstract class Connection implements ConnectionInterface {
 
 	/**
@@ -67,7 +69,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function insert(string $table, array $data) {
+	function insert($table, array $data) {
 		$data = $this->cleanFields($table, $data);
 		$params = $this->cleanParams(array_values($data));
 		$fields = array_keys($data);
@@ -78,7 +80,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function update(string $table, array $data) {
+	function update($table, array $data) {
 		$keyNames = $this->getPKey($table);
 		$idValues = array_intersect_key($data, array_fill_keys($keyNames, NULL));
 		$data = array_diff_key($data, $idValues);
@@ -95,7 +97,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function delete(string $table, array $ids) {
+	function delete($table, array $ids) {
 		$keyNames = $this->getPKey($table);
 		$sql = "delete from $table where ".implode(" = ?", $keyNames);
 		return $this->exec($sql, $ids);
@@ -104,7 +106,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function merge(string $table, array $data) {
+	function merge($table, array $data) {
 		$keyNames = $this->getPKey($table);
 		$idValues = array_intersect_key($data, array_fill_keys($keyNames, NULL));
 		if (count($idValues) == 0) {
@@ -117,7 +119,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function syncData(string $table, array $dataRows, string $where = null, array $params = null) {
+	function syncData($table, array $dataRows, $where = null, array $params = null) {
 		$keyNames = $this->getPKey($table);
 
 		$currentContentSQL = "SELECT ".implode(" || '-' || ", $keyNames)." as THEKEY FROM $table".(!empty($where)?" WHERE $where":"");
@@ -141,7 +143,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function select(string $query, array $params = null) {
+	function select($query, array $params = null) {
 		if (strpos(strtolower($query), 'select ') === false) {
 			$query = "select * from $query where ".implode(" and ", array_map(function($k) {return "($k = ?)";}, array_keys($params)));
 		}
@@ -151,7 +153,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function selectOne(string $query, array $params = null) {
+	function selectOne($query, array $params = null) {
 		$result = $this->exec($query, array_values($params));
 		if (!empty($result)) {
 			return $result[0];
@@ -162,7 +164,7 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function selectValue(string $query, array $params = null) {
+	function selectValue($query, array $params = null) {
 		$result = $this->exec($query, array_values($params));
 		if (!empty($result)) {
 			list($value) = array_values($result[0]);
@@ -178,7 +180,7 @@ abstract class Connection implements ConnectionInterface {
 	 * @param array $params
 	 * @return \Generator|null|mixed
 	 */
-	abstract public function exec(string $query, array $params = null);
+	abstract public function exec($query, array $params = null);
 
 	/**
 	 * Undocumented function
