@@ -1,17 +1,21 @@
 <?php
 
-namespace \DB;
+namespace DB;
+
+use DB\Drivers\MultiConnection;
 
 class Factory {
 
 	/**
 	 * Creates new connection
 	 *
-	 * @param ConnectionInterface|string $conn
+	 * @param string|array $conn
 	 * @return ConnectionInterface
 	 */
 	static function connect($conn) {
-		if ($conn instanceof ConnectionInterface) {
+		if (is_array($conn)) {
+			return new MultiConnection($conn);
+		} else if ($conn instanceof ConnectionInterface) {
 			return $conn;
 		} else {
 			if ($url = (object)parse_url($conn)) {

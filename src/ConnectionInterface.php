@@ -49,8 +49,8 @@ interface ConnectionInterface {
 
 	/**
 	 * Synchronizes the content of $dataRows with the content of $table where $where.
-	 * The comparison is made according to the key field. If key is provided in
-	 * the $dataRows is updated, if no key is provided in $dataRows the data is inserted,
+	 * The comparison is made according to the key field/s. If keys are provided,
+	 * the $dataRows are updated, if no key is provided, the data in $dataRows is inserted,
 	 * if the key is missing from the data the row is deleted from the table.
 	 *
 	 * @param string $table The table to sync with.
