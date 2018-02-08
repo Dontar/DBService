@@ -7,6 +7,7 @@ RUN mkdir -m 777 -p /srv/test
 
 COPY src /srv/test/
 COPY test /srv/test/
+COPY vendor /srv/test/
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
