@@ -28,7 +28,7 @@ abstract class Connection implements ConnectionInterface {
 	abstract protected function getColumns($table);
 
 	/**
-	 * Trys to clean params values ie. booleans, null's, strings etc.
+	 * Try's to clean params values ie. booleans, nulls, strings etc.
 	 *
 	 * @param array $params
 	 * @return array
@@ -49,7 +49,7 @@ abstract class Connection implements ConnectionInterface {
 	}
 
 	/**
-	 * Rmoves does fields from $data that do not exists in $table
+	 * Removes does fields from $data that do not exists in $table
 	 *
 	 * @param string $table
 	 * @param array $data
@@ -144,17 +144,20 @@ abstract class Connection implements ConnectionInterface {
 	 * {@inheritDoc}
 	 */
 	function select($query, array $params = null) {
-		if (strpos(strtolower($query), 'select ') === false) {
-			$query = "select * from $query where ".implode(" and ", array_map(function($k) {return "($k = ?)";}, array_keys($params)));
+		if(strpos(strtolower($query), 'select ') === false) {
+			$query = "SELECT * FROM $query";
+		};
+		if (!empty($params)) {
+			$query = "$query where ".implode(" and ", array_map(function($k) {return "($k = ?)";}, array_keys($params)));
 		}
-		return $this->exec($query, array_values($params));
+		return $this->exec($query, empty($params)?NULL:array_values($params));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	function selectOne($query, array $params = null) {
-		$result = $this->exec($query, array_values($params));
+		$result = $this->exec($query, empty($params)?NULL:array_values($params));
 		if (!empty($result)) {
 			return $result[0];
 		}
@@ -165,7 +168,7 @@ abstract class Connection implements ConnectionInterface {
 	 * {@inheritDoc}
 	 */
 	function selectValue($query, array $params = null) {
-		$result = $this->exec($query, array_values($params));
+		$result = $this->exec($query, empty($params)?NULL:array_values($params));
 		if (!empty($result)) {
 			list($value) = array_values($result[0]);
 			return $value;

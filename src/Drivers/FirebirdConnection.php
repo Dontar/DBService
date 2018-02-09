@@ -11,7 +11,7 @@ class FirebirdConnection extends Connection {
 		$opts = parse_url($conn);
 
 		$this->db = ibase_connect(
-			sprintf("%s/%s:%d",
+			sprintf("%s/%d:%s",
 				$opts['host'],
 				!empty($opts['port'])?$opts['port']:"3050",
 				trim($opts['path'],"/")
