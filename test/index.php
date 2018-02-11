@@ -6,7 +6,7 @@ require "../vendor/autoload.php";
 $db = Factory::connect("firebird://SYSDBA:masterkey@prio.estate-control.com/Realestate");
 
 // $users = $db->select("select rr.rdb\$relation_name from rdb\$relations rr where rr.rdb\$system_flag = 0");
-$users = $db->select("select * from \"USER\"");
+$users = $db->select('SELECT * FROM view_user');
 
 ?>
 

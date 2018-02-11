@@ -16,7 +16,7 @@ class FirebirdConnection extends Connection {
 				!empty($opts['port'])?$opts['port']:"3050",
 				trim($opts['path'],"/")
 			),
-			$opts['user'], $opts['pass']
+			$opts['user'], $opts['pass'], "UTF8"
 		);
 	}
 
