@@ -13,7 +13,7 @@ interface ConnectionInterface {
 	 *
 	 * @param string $table The table to insert into.
 	 * @param array $data Data to insert.
-	 * @return integer The generated table ID (the value of the key field).
+	 * @return mixed The generated table ID (the value of the key field).
 	 */
 	function insert($table, array $data);
 
@@ -23,7 +23,7 @@ interface ConnectionInterface {
 	 *
 	 * @param string $table Table to update.
 	 * @param array $data Data to update with.
-	 * @return integer Number of updated field. Currently only 1 or 0.
+	 * @return mixed Number of updated field. Currently only 1 or 0.
 	 */
 	function update($table, array $data);
 
@@ -33,7 +33,7 @@ interface ConnectionInterface {
 	 *
 	 * @param string $table Table to delete from.
 	 * @param mixed $id The key value to delete.
-	 * @return void
+	 * @return integer
 	 */
 	function delete($table, array $ids);
 
@@ -43,7 +43,7 @@ interface ConnectionInterface {
 	 *
 	 * @param string $table
 	 * @param array $data
-	 * @return void
+	 * @return mixed
 	 */
 	function merge($table, array $data);
 

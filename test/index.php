@@ -14,19 +14,15 @@ $filter = [
 $where = F::where(F::filter($filter)
 	->and("is_manager")->eq()
 	->and("is_object_manager")->eq()
-	)->or(
-		F::Filter($filter)->and("email")->like()
-	);
+)->or(
+	F::Filter($filter)->and("email")->like()
+);
 // $where = F::filter($filter)
 // 	->and("is_manager")->eq()
 // 	->and("is_object_manager")->eq()
 // 	->or("email")->like();
 
 $users = $db->select("SELECT * FROM view_user WHERE $where");
-
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -39,13 +35,13 @@ $users = $db->select("SELECT * FROM view_user WHERE $where");
 </head>
 <body>
 	<p>
-		<?php echo $where ?>
+		<?=$where?>
 	</p>
 <table>
 	<?php foreach($users as $user) { ?>
 	<tr>
 		<?php foreach($user as $value) { ?>
-		<td><?php echo $value; ?></td>
+		<td><?=$value?></td>
 		<?php } ?>
 	</tr>
 	<?php } ?>

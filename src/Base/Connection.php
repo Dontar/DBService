@@ -112,8 +112,7 @@ abstract class Connection implements ConnectionInterface {
 		if (count($idValues) == 0) {
 			return $this->insert($table, $data);
 		}
-		$this->update($table, $data);
-		return $idValues;
+		return $this->update($table, $data);
 	}
 
 	/**
