@@ -3,6 +3,7 @@
 namespace DB;
 
 use DB\Drivers\MultiConnection;
+use DB\Utils\Where;
 
 class Factory {
 
@@ -23,5 +24,25 @@ class Factory {
 				return new $className($conn);
 			}
 		}
+	}
+
+	/**
+	 * Undocumented function
+	 *
+	 * @param string $exp
+	 * @return Where
+	 */
+	static function where($exp) {
+		return (new Where())->and($exp);
+	}
+
+	/**
+	 * Undocumented function
+	 *
+	 * @param array $filter
+	 * @return Where
+	 */
+	static function filter($filter) {
+		return (new Where($filter));
 	}
 }

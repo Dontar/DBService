@@ -1,12 +1,31 @@
 <?php
-use DB\Factory;
+use DB\Factory as F;
 require "../vendor/autoload.php";
 
 
-$db = Factory::connect("firebird://SYSDBA:masterkey@prio.estate-control.com/Realestate");
+$db = F::connect("firebird://SYSDBA:masterkey@prio.estate-control.com/Realestate");
 
-// $users = $db->select("select rr.rdb\$relation_name from rdb\$relations rr where rr.rdb\$system_flag = 0");
-$users = $db->select('SELECT * FROM view_user');
+$filter = [
+	"is_manager" => 0,
+	"is_object_manager" => 0,
+	"email" => "%@%.com"
+];
+
+$where = F::where(F::filter($filter)
+	->and("is_manager")->eq()
+	->and("is_object_manager")->eq()
+	)->or(
+		F::Filter($filter)->and("email")->like()
+	);
+// $where = F::filter($filter)
+// 	->and("is_manager")->eq()
+// 	->and("is_object_manager")->eq()
+// 	->or("email")->like();
+
+$users = $db->select("SELECT * FROM view_user WHERE $where");
+
+
+
 
 ?>
 
@@ -19,6 +38,9 @@ $users = $db->select('SELECT * FROM view_user');
 	<title>DB Service</title>
 </head>
 <body>
+	<p>
+		<?php echo $where ?>
+	</p>
 <table>
 	<?php foreach($users as $user) { ?>
 	<tr>
