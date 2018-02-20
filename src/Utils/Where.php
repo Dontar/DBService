@@ -80,7 +80,9 @@ class Where {
 				foreach($this->expressions as $cond) {
 					list($c, $lexp, $op, $rexp) = $cond;
 
-					if (is_array($this->filter) && !isset($this->filter[$lexp])) continue;
+					list($fField, $dbField) = (count($exp = explode(" as ", $lexp)) > 1)?$exp:[$lexp, $lexp];
+
+					if (!array_key_exists($fField, $this->filter)) continue;
 
 					switch ($op) {
 						case 'IN':
@@ -92,7 +94,7 @@ class Where {
 						default:
 							$rexp = $esc($rexp);
 					}
-					$result[] = trim(sprintf("%s (%s %s %s)", !empty($result) ? $c : "", $lexp, $op, $rexp));
+					$result[] = trim(sprintf("%s (%s %s %s)", !empty($result) ? $c : "", $dbField, $op, $rexp));
 				}
 				return implode(" ", count($result) ? $result : ["(1 = 1)"]);
 			default:
@@ -100,7 +102,8 @@ class Where {
 				$cond = &$this->expressions[count($this->expressions) - 1];
 				$cond[2] = $this->expMap[$name];
 				if ($this->filter && !$len) {
-					$cond[3] = array_key_exists($cond[1], $this->filter) ? $this->filter[$cond[1]] : "NULL";
+					list($fField) = explode(" as ", $cond[1]);
+					$cond[3] = array_key_exists($fField, $this->filter) ? $this->filter[$fField] : "NULL";
 				} else {
 					$cond[3] = ($len) ? (($len > 1) ? $args : $args[0]) : "NULL";
 				}
