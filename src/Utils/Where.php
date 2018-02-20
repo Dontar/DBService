@@ -80,9 +80,10 @@ class Where {
 				foreach($this->expressions as $cond) {
 					list($c, $lexp, $op, $rexp) = $cond;
 
-					list($fField, $dbField) = (count($exp = explode(" as ", $lexp)) > 1)?$exp:[$lexp, $lexp];
+					list($fField, $dbField) = (count($exp = explode(" as ", $lexp)) > 1) ? $exp : [$lexp, $lexp];
 
-					if (!array_key_exists($fField, $this->filter)) continue;
+					if (is_array($this->filter) && !array_key_exists($fField, $this->filter)) continue;
+					if (empty($rexp)) continue;
 
 					switch ($op) {
 						case 'IN':
