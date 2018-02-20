@@ -7,6 +7,8 @@ use DB\Utils\Where;
 
 class Factory {
 
+	private $currentConn;
+
 	/**
 	 * Creates new connection
 	 *
@@ -15,14 +17,16 @@ class Factory {
 	 */
 	static function connect($conn) {
 		if (is_array($conn)) {
-			return new MultiConnection($conn);
+			return $this->currentConn = new MultiConnection($conn);
 		} else if ($conn instanceof ConnectionInterface) {
-			return $conn;
-		} else {
-			if ($url = (object)parse_url($conn)) {
-				$className = "DB\\Drivers\\".ucfirst(strtolower($url->scheme))."Connection";
-				return new $className($conn);
+			return $this->currentConn = $conn;
+		} else if (is_string($conn)) {
+			if ($scheme = parse_url($conn, PHP_URL_SCHEME)) {
+				$className = "DB\\Drivers\\".ucfirst(strtolower($scheme))."Connection";
+				return $this->currentConn = new $className($conn);
 			}
+		} else {
+			return $this->currentConn;
 		}
 	}
 
