@@ -39,7 +39,7 @@ SQL;
 		return $result;
 	}
 
-	function exec($query, $params = null) {
+	function exec($query, array $params = null) {
 		$stmt = null;
 		if (!empty($params)) {
 			$p = array_keys($params);

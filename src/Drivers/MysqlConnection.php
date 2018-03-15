@@ -35,7 +35,7 @@ class MysqlConnection extends Connection {
 		return $result;
 	}
 
-	function exec($query, $params = null) {
+	function exec($query, array $params = null) {
 		if (!empty($params)) {
 			$query = preg_replace_callback("/\?/", function() use (&$params) {
 				return "'".mysql_escape_string(array_shift($params))."'";

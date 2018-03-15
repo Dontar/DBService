@@ -45,7 +45,7 @@ SQL;
 		return $result;
 	}
 
-	function exec($query, $params = null) {
+	function exec($query, array $params = null) {
 		if (!empty($params)) {
 			$query = preg_replace_callback("/\?/", function() use (&$params) {
 				return "'".str_replace("'", "''", array_shift($params))."'";
