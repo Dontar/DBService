@@ -15,7 +15,7 @@ class Factory {
 	 * @param string|array $conn
 	 * @return ConnectionInterface
 	 */
-	static function connect($conn) {
+	static function connect($conn = null) {
 		if (is_array($conn)) {
 			return self::$currentConn = new MultiConnection($conn);
 		} else if ($conn instanceof ConnectionInterface) {

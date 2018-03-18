@@ -4,7 +4,15 @@ namespace DB\Base;
 
 use DB\ConnectionInterface;
 
-abstract class Connection implements ConnectionInterface {
+abstract class Connection implements ConnectionInterface
+{
+
+	/**
+	 * Native handle
+	 *
+	 * @var resource
+	 */
+	public $db;
 
 	/**
 	 * @var string
@@ -33,16 +41,17 @@ abstract class Connection implements ConnectionInterface {
 	 * @param array $params
 	 * @return array
 	 */
-	protected function cleanParams($params) {
-		return array_map(function($item) {
+	protected function cleanParams($params)
+	{
+		return array_map(function ($item) {
 			if (is_bool($item)) {
-				return $item?"1":"0";
+				return $item ? "1" : "0";
 			}
 			if (is_string($item) && $item == "null") {
 				return null;
 			}
 			if (is_string($item)) {
-				return strlen($item) > 0?$item:null;
+				return strlen($item) > 0 ? $item : null;
 			}
 			return $item;
 		}, $params);
@@ -55,10 +64,11 @@ abstract class Connection implements ConnectionInterface {
 	 * @param array $data
 	 * @return void
 	 */
-	protected function cleanFields($table, $data) {
+	protected function cleanFields($table, $data)
+	{
 		$result = array();
 		$cols = $this->getColumns($table);
-		foreach($cols as $name) {
+		foreach ($cols as $name) {
 			if (array_key_exists($name, $data)) {
 				$result[$name] = $data[$name];
 			}
@@ -69,20 +79,22 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function insert($table, array $data) {
+	function insert($table, array $data)
+	{
 		$data = $this->cleanFields($table, $data);
 		$params = $this->cleanParams(array_values($data));
 		$fields = array_keys($data);
 		$keyNames = $this->getPKey($table);
-		return $this->selectValue("INSERT INTO $table (".implode(", ", $fields).") VALUES (".str_repeat("?,", count($values) - 1)."?) RETURNING ".implode(", ", $keyNames), $params);
+		return $this->selectValue("INSERT INTO $table (" . implode(", ", $fields) . ") VALUES (" . str_repeat("?,", count($values) - 1) . "?) RETURNING " . implode(", ", $keyNames), $params);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	function update($table, array $data) {
+	function update($table, array $data)
+	{
 		$keyNames = $this->getPKey($table);
-		$idValues = array_intersect_key($data, array_fill_keys($keyNames, NULL));
+		$idValues = array_intersect_key($data, array_fill_keys($keyNames, null));
 		$data = array_diff_key($data, $idValues);
 
 		$data = $this->cleanFields($table, $data);
@@ -90,25 +102,27 @@ abstract class Connection implements ConnectionInterface {
 		$params = $this->cleanParams(array_values($data));
 		$params = array_merge($params, $idValues);
 
-		$sql = "UPDATE $table SET ".implode(" = ?,", $fields)." = ? WHERE (".implode(" = ?", $keyNames).")";
+		$sql = "UPDATE $table SET " . implode(" = ?,", $fields) . " = ? WHERE (" . implode(" = ?", $keyNames) . ")";
 		return $this->exec($sql, $params);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	function delete($table, array $ids) {
+	function delete($table, array $ids)
+	{
 		$keyNames = $this->getPKey($table);
-		$sql = "delete from $table where ".implode(" = ?", $keyNames);
+		$sql = "delete from $table where " . implode(" = ?", $keyNames);
 		return $this->exec($sql, $ids);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	function merge($table, array $data) {
+	function merge($table, array $data)
+	{
 		$keyNames = $this->getPKey($table);
-		$idValues = array_intersect_key($data, array_fill_keys($keyNames, NULL));
+		$idValues = array_intersect_key($data, array_fill_keys($keyNames, null));
 		if (count($idValues) == 0) {
 			return $this->insert($table, $data);
 		}
@@ -118,13 +132,14 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function syncData($table, array $dataRows, $where = null, array $params = null) {
+	function syncData($table, array $dataRows, $where = null, array $params = null)
+	{
 		$keyNames = $this->getPKey($table);
 
-		$currentContentSQL = "SELECT ".implode(" || '-' || ", $keyNames)." as THEKEY FROM $table".(!empty($where)?" WHERE $where":"");
+		$currentContentSQL = "SELECT " . implode(" || '-' || ", $keyNames) . " as THEKEY FROM $table" . (!empty($where) ? " WHERE $where" : "");
 		$currentContent = array_column(iterator_to_array($this->exec($currentContentSQL)), "THEKEY");
-		$incomingData = array_map(function($row) use ($keyNames) {
-			$idValues = array_intersect_key($row, array_fill_keys($keyNames, NULL));
+		$incomingData = array_map(function ($row) use ($keyNames) {
+			$idValues = array_intersect_key($row, array_fill_keys($keyNames, null));
 			return implode("-", array_values($idValues));
 		});
 		$rowsForDelete = array_diff($currentContent, $incomingData);
@@ -133,7 +148,7 @@ abstract class Connection implements ConnectionInterface {
 			$this->delete($table, explode("-", $keyValue));
 		}
 
-		return array_map(function($row) use ($keyNames, $table) {
+		return array_map(function ($row) use ($keyNames, $table) {
 			$ids = $this->merge($table, $row);
 			return array_merge($row, $ids);
 		}, $dataRows);
@@ -142,21 +157,25 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function select($query, array $params = null) {
-		if(strpos(strtolower($query), 'select ') === false) {
+	function select($query, array $params = null)
+	{
+		if (strpos(strtolower($query), 'select') === false) {
 			$query = "SELECT * FROM $query";
 		};
 		if (!empty($params)) {
-			$query = "$query where ".implode(" and ", array_map(function($k) {return "($k = ?)";}, array_keys($params)));
+			$query = "$query where " . implode(" and ", array_map(function ($k) {
+				return "($k = ?)";
+			}, array_keys($params)));
 		}
-		return $this->exec($query, empty($params)?NULL:array_values($params));
+		return $this->exec($query, empty($params) ? null : array_values($params));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	function selectOne($query, array $params = null) {
-		$result = $this->exec($query, empty($params)?NULL:array_values($params));
+	function selectOne($query, array $params = null)
+	{
+		$result = $this->exec($query, empty($params) ? null : array_values($params));
 		if (!empty($result)) {
 			return $result[0];
 		}
@@ -166,8 +185,9 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	function selectValue($query, array $params = null) {
-		$result = $this->exec($query, empty($params)?NULL:array_values($params));
+	function selectValue($query, array $params = null)
+	{
+		$result = $this->exec($query, empty($params) ? null : array_values($params));
 		if (!empty($result)) {
 			list($value) = array_values($result[0]);
 			return $value;
@@ -187,21 +207,38 @@ abstract class Connection implements ConnectionInterface {
 	/**
 	 * Undocumented function
 	 *
-	 * @param string $from
-	 * @param string $to
-	 * @param string $field
+	 * @param callable $callback
 	 * @return void
 	 */
-	function sqlDate($from, $to, $field) {
-		if (!empty($from)) {
-			if (!empty($to)) {
-				return "($field BETWEEN '$from' AND ('$to' + 1))";
-
-			} else {
-				return "($field >= '$from')";
+	protected function handleError($callback)
+	{
+		$error = [];
+		set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line) use (&$error) {
+			if (0 === error_reporting()) {
+				return false;
 			}
+			$error['type'] = $err_severity;
+			$error['message'] = $err_msg;
+			$error['file'] = $err_file;
+			$error['line'] = $err_line;
+			return true;
+		});
 
-		} else
-			return '';
+		$result = $callback($this->db);
+
+		set_error_handler(null);
+		if (!empty($error)) {
+			// $msg = "%s\nSQL: %s\nParams: %s\n";
+			throw new \ErrorException(
+				// sprintf($msg, $err['message'], $query, json_encode($params)),
+				$error['message'],
+				$error['type'],
+				$error['type'],
+				$error['file'],
+				$error['line']
+			);
+		}
+		return $result;
 	}
+
 }
