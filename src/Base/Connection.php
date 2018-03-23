@@ -208,12 +208,12 @@ abstract class Connection implements ConnectionInterface
 	 * Undocumented function
 	 *
 	 * @param callable $callback
-	 * @return void
+	 * @return mixed
 	 */
 	protected function handleError($callback)
 	{
 		$error = [];
-		set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line) use (&$error) {
+		$oldHandler = set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line) use (&$error) {
 			if (0 === error_reporting()) {
 				return false;
 			}
@@ -226,7 +226,7 @@ abstract class Connection implements ConnectionInterface
 
 		$result = $callback($this->db);
 
-		set_error_handler(null);
+		set_error_handler($oldHandler);
 		if (!empty($error)) {
 			// $msg = "%s\nSQL: %s\nParams: %s\n";
 			throw new \ErrorException(
