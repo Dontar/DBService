@@ -10,8 +10,8 @@ class Oci8Connection extends Connection
 	function __construct($conn)
 	{
 		$opts = parse_url($conn);
-
-		$this->db = oci_connect(
+		parse_str($opts['query'], $params);
+		$args = [
 			$opts['user'],
 			$opts['pass'],
 			sprintf(
@@ -20,7 +20,12 @@ class Oci8Connection extends Connection
 				empty($opts['port']) ? "3307" : $opts['port'],
 				trim($opts['path'], "/")
 			)
-		);
+		];
+		if (!empty($params) && !empty($params['charset'])) {
+			$args[] = $params['charset'];
+		}
+
+		$this->db = call_user_func_array("oci_connect", $args);
 	}
 
 	protected function getPKey($table)
