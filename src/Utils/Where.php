@@ -23,7 +23,8 @@ namespace DB\Utils;
  * @method Where isNull();
  * @method Where isNotNull();
  */
-class Where {
+class Where
+{
 
 	private $expMap = [
 		"in" => "IN",
@@ -45,11 +46,13 @@ class Where {
 
 	private $filter;
 
-	function __construct($filter = null) {
-		$this->filter = $filter;
+	function __construct($filter = null)
+	{
+		$this->filter = $filter ? (array)$filter : $filter;
 	}
 
-	function __call($name, array $args) {
+	function __call($name, array $args)
+	{
 		switch ($name) {
 			case 'and':
 			case 'or':
@@ -67,17 +70,17 @@ class Where {
 				break;
 			case "get":
 				$result = [];
-				$esc = function($v) {
+				$esc = function ($v) {
 					if (is_numeric($v) || empty($v) || "NULL" === strtoupper($v)) {
 						return $v;
 					}
 					if (is_bool($v)) {
 						return $v ? 1 : 0;
 					}
-					return "'".str_replace("'", "''", $v)."'";
+					return "'" . str_replace("'", "''", $v) . "'";
 				};
 
-				foreach($this->expressions as $cond) {
+				foreach ($this->expressions as $cond) {
 					list($c, $lexp, $op, $rexp) = $cond;
 
 					list($fField, $dbField) = (count($exp = explode(" as ", $lexp)) > 1) ? $exp : [$lexp, $lexp];
@@ -87,7 +90,7 @@ class Where {
 
 					switch ($op) {
 						case 'IN':
-							$rexp = is_array($rexp) ? "(".implode(", ", array_map($esc, $rexp)).")" : "(".$rexp.")";
+							$rexp = is_array($rexp) ? "(" . implode(", ", array_map($esc, $rexp)) . ")" : "(" . $rexp . ")";
 							break;
 						case 'BETWEEN':
 							$rexp = implode(" AND ", array_map($esc, $rexp));
@@ -113,7 +116,8 @@ class Where {
 		return $this;
 	}
 
-	function __toString() {
+	function __toString()
+	{
 		return $this->get();
 	}
 }
