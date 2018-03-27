@@ -74,4 +74,45 @@ SQL;
 			yield array_change_key_case($row);
 		}
 	}
+
+	function pivot($sql, $valueFields, $colFields, $hasOps = false)
+	{
+		$valueFields = implode(",", !$hasOps ? array_map(function ($n) {
+			return "sum($n) as $n";
+		}, $valueFields) : $valueFields);
+
+		$cartesian = function ($set) use (&$cartesian) {
+			if (!$set) {
+				return array(array());
+			}
+			$subset = array_shift($set);
+			$cartesianSubset = $cartesian($set);
+			$result = array();
+			foreach ($subset as $value) {
+				foreach ($cartesianSubset as $p) {
+					array_unshift($p, $value);
+					$result[] = $p;
+				}
+			}
+			return $result;
+		};
+
+		$cart = $cartesian(array_values($colFields));
+		$cart = implode(",", array_map(function ($i) {
+			return "(" . implode(",", $i) . ")";
+		}, $cart));
+
+
+		$colFields = "FOR (" . implode(",", array_keys($colFields)) . ") IN (" . $cart . ")";
+
+		$query = <<<SQL
+select * from ($sql)
+pivot (
+	$valueFields
+	$colFields
+)
+SQL;
+		// return $this->exec($query);
+		return $query;
+	}
 }
