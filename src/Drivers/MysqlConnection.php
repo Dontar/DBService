@@ -7,19 +7,24 @@ use DB\Base\Connection;
 class MysqlConnection extends Connection
 {
 
-	function __construct($conn)
+	function connect($uri = null)
 	{
-		$opts = parse_url($conn);
+		$uri = empty($uri) ? $this->connectionString : $uri;
+		$opts = parse_url($uri);
 
-		$this->db = mysql_connect(
-			sprintf(
-				"%s:%d",
-				$opts['host'],
-				empty($opts['port']) ? "3307" : $opts['port']
-			),
-			$opts['user'],
-			$opts['pass']
-		);
+		$self = $this;
+		$this->handleError(function () use (&$opts, &$self) {
+			$self->db = mysql_connect(
+				sprintf(
+					"%s:%d",
+					$opts['host'],
+					empty($opts['port']) ? "3307" : $opts['port']
+				),
+				$opts['user'],
+				$opts['pass']
+			);
+		});
+		$this->connected = true;
 	}
 
 	protected function getPKey($table)
@@ -41,6 +46,7 @@ class MysqlConnection extends Connection
 
 	function exec($query, array $params = null)
 	{
+		if (!$this->connected) $this->connect();
 		if (!empty($params)) {
 			$query = preg_replace_callback("/\?/", function () use (&$params) {
 				return "'" . mysql_escape_string(array_shift($params)) . "'";

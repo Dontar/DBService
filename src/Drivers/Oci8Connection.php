@@ -7,9 +7,10 @@ use DB\Base\Connection;
 class Oci8Connection extends Connection
 {
 
-	function __construct($conn)
+	function connect($uri = null)
 	{
-		$opts = parse_url($conn);
+		$uri = empty($uri) ? $this->connectionString : $uri;
+		$opts = parse_url($uri);
 		parse_str($opts['query'], $params);
 		$args = [
 			$opts['user'],
@@ -25,7 +26,11 @@ class Oci8Connection extends Connection
 			$args[] = $params['charset'];
 		}
 
-		$this->db = call_user_func_array("oci_connect", $args);
+		$self = $this;
+		$this->handleError(function () use (&$self, &$args) {
+			$self->db = call_user_func_array("oci_connect", $args);
+		});
+		$this->connected = true;
 	}
 
 	protected function getPKey($table)
@@ -56,6 +61,7 @@ SQL;
 
 	function exec($query, array $params = null)
 	{
+		if (!$this->connected) $this->connect();
 		if (!empty($params)) {
 			$query = preg_replace_callback("/\?/", function () use (&$params) {
 				return "'" . str_replace("'", "''", array_shift($params)) . "'";
@@ -67,7 +73,7 @@ SQL;
 		});
 
 		while (($row = oci_fetch_assoc($stmt)) !== false) {
-			yield array_combine(array_map("strtolower", array_keys($row)), array_values($row));
+			yield array_change_key_case($row);
 		}
 	}
 }

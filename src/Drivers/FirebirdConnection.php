@@ -7,21 +7,26 @@ use DB\Base\Connection;
 class FirebirdConnection extends Connection
 {
 
-	function __construct($conn)
+	function connect($uri = null)
 	{
-		$opts = parse_url($conn);
-
-		$this->db = ibase_connect(
-			sprintf(
-				"%s/%d:%s",
-				$opts['host'],
-				!empty($opts['port']) ? $opts['port'] : "3050",
-				trim($opts['path'], "/")
-			),
-			$opts['user'],
-			$opts['pass'],
-			"UTF8"
-		);
+		$uri = empty($uri) ? $this->connectionString : $uri;
+		$opts = parse_url($uri);
+		$self = $this;
+		$this->handleError(function() use (&$opts, &$self) {
+			parse_str($opts['query'], $params);
+			$self->db = ibase_connect(
+				sprintf(
+					"%s/%d:%s",
+					$opts['host'],
+					!empty($opts['port']) ? $opts['port'] : "3050",
+					trim($opts['path'], "/")
+				),
+				$opts['user'],
+				$opts['pass'],
+				$params['charset']?$params['charset']:"UTF8"
+			);
+		});
+		$this->connected = true;
 	}
 
 	protected function getPKey($table)
@@ -53,6 +58,7 @@ SQL;
 
 	function exec($query, array $params = null)
 	{
+		if (!$this->connected) $this->connect();
 		$stmt = $this->handleError(function($db) use (&$query, &$params) {
 			if (empty($params)) {
 				return ibase_query($db, $query);

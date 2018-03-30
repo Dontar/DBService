@@ -6,20 +6,27 @@ use DB\Base\Connection;
 
 class PgsqlConnection extends Connection
 {
-	function __construct($conn)
+	function connect($uri = null)
 	{
-		$opts = parse_url($conn);
+		$uri = empty($uri) ? $this->connectionString : $uri;
+		$opts = parse_url($uri);
 
-		$this->db = pg_connect(
-			sprintf(
-				"host=%s port=%d dbname=%s user=%s password=%s options='--client_encoding=UTF8'",
-				$opts['host'],
-				empty($opts['port']) ? "5432" : $opts['port'],
-				trim($opts['path'], "/"),
-				$opts['user'],
-				$opts['pass']
-			)
-		);
+		$self = $this;
+		$this->handleError(function () use (&$opts, &$self) {
+			parse_str($opts['query'], $params);
+			$self->db = pg_connect(
+				sprintf(
+					"host=%s port=%d dbname=%s user=%s password=%s options='--client_encoding=%s'",
+					$opts['host'],
+					empty($opts['port']) ? "5432" : $opts['port'],
+					trim($opts['path'], "/"),
+					$opts['user'],
+					$opts['pass'],
+					$params['charset']?$params['charset']:"UTF8"
+				)
+			);
+		});
+		$this->connected = true;
 	}
 
 	protected function getPKey($table)
@@ -46,7 +53,8 @@ SQL;
 
 	function exec($query, array $params = null)
 	{
-		$stmt = $this->handleError(function($db) use (&$query, &$params) {
+		if (!$this->connected) $this->connect();
+		$stmt = $this->handleError(function ($db) use (&$query, &$params) {
 			if (!empty($params)) {
 				$p = array_keys($params);
 				$query = preg_replace_callback("/\?/", function () use (&$p) {

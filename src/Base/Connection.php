@@ -20,6 +20,13 @@ abstract class Connection implements ConnectionInterface
 	public $connectionString;
 
 	/**
+	 * Is the driver connected
+	 *
+	 * @var boolean
+	 */
+	public $connected;
+
+	/**
 	 * Finds the name of PK column for $table.
 	 *
 	 * @param string $table
@@ -34,6 +41,64 @@ abstract class Connection implements ConnectionInterface
 	 * @return void
 	 */
 	abstract protected function getColumns($table);
+
+	/**
+	 * The backbone of the lib
+	 *
+	 * @param string $query
+	 * @param array $params
+	 * @return \Generator|null|mixed
+	 */
+	abstract public function exec($query, array $params = null);
+
+	/**
+	 * Connect to database
+	 * @param string $uri
+	 * @return void
+	 */
+	abstract public function connect($uri);
+
+	function __construct($conn)
+	{
+		$this->connectionString = $conn;
+	}
+
+	/**
+	 * Undocumented function
+	 *
+	 * @param callable $callback
+	 * @return mixed
+	 */
+	protected function handleError($callback)
+	{
+		$error = [];
+		$oldHandler = set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line) use (&$error) {
+			if (0 === error_reporting()) {
+				return false;
+			}
+			$error['type'] = $err_severity;
+			$error['message'] = $err_msg;
+			$error['file'] = $err_file;
+			$error['line'] = $err_line;
+			return true;
+		});
+
+		$result = $callback($this->db);
+
+		set_error_handler($oldHandler);
+		if (!empty($error)) {
+			// $msg = "%s\nSQL: %s\nParams: %s\n";
+			throw new \ErrorException(
+				// sprintf($msg, $err['message'], $query, json_encode($params)),
+				$error['message'],
+				$error['type'],
+				$error['type'],
+				$error['file'],
+				$error['line']
+			);
+		}
+		return $result;
+	}
 
 	/**
 	 * Try's to clean params values ie. booleans, nulls, strings etc.
@@ -194,51 +259,4 @@ abstract class Connection implements ConnectionInterface
 		}
 		return null;
 	}
-
-	/**
-	 * The backbone of the lib
-	 *
-	 * @param string $query
-	 * @param array $params
-	 * @return \Generator|null|mixed
-	 */
-	abstract public function exec($query, array $params = null);
-
-	/**
-	 * Undocumented function
-	 *
-	 * @param callable $callback
-	 * @return mixed
-	 */
-	protected function handleError($callback)
-	{
-		$error = [];
-		$oldHandler = set_error_handler(function ($err_severity, $err_msg, $err_file, $err_line) use (&$error) {
-			if (0 === error_reporting()) {
-				return false;
-			}
-			$error['type'] = $err_severity;
-			$error['message'] = $err_msg;
-			$error['file'] = $err_file;
-			$error['line'] = $err_line;
-			return true;
-		});
-
-		$result = $callback($this->db);
-
-		set_error_handler($oldHandler);
-		if (!empty($error)) {
-			// $msg = "%s\nSQL: %s\nParams: %s\n";
-			throw new \ErrorException(
-				// sprintf($msg, $err['message'], $query, json_encode($params)),
-				$error['message'],
-				$error['type'],
-				$error['type'],
-				$error['file'],
-				$error['line']
-			);
-		}
-		return $result;
-	}
-
 }
