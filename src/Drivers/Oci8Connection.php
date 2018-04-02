@@ -18,17 +18,15 @@ class Oci8Connection extends Connection
 			sprintf(
 				"%s:%d/%s",
 				$opts['host'],
-				empty($opts['port']) ? "3307" : $opts['port'],
+				empty($opts['port']) ? "1521" : $opts['port'],
 				trim($opts['path'], "/")
-			)
+			),
+			$params['charset']?$params['charset']:"AL32UTF8"
 		];
-		if (!empty($params) && !empty($params['charset'])) {
-			$args[] = $params['charset'];
-		}
 
 		$self = $this;
 		$this->handleError(function () use (&$self, &$args) {
-			$self->db = call_user_func_array("oci_connect", $args);
+			$self->db = call_user_func_array("oci_pconnect", $args);
 		});
 		$this->connected = true;
 	}
