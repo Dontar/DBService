@@ -86,7 +86,7 @@ class Where
 					list($fField, $dbField) = (count($exp = explode(" as ", $lexp)) > 1) ? $exp : [$lexp, $lexp];
 
 					if (is_array($this->filter) && !array_key_exists($fField, $this->filter)) continue;
-					if (empty($rexp)) continue;
+					if (empty($rexp) && $rexp !== 0) continue;
 
 					switch ($op) {
 						case 'IN':
