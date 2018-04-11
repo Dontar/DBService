@@ -240,9 +240,9 @@ abstract class Connection implements ConnectionInterface
 	 */
 	function selectOne($query, array $params = null)
 	{
-		$result = $this->exec($query, empty($params) ? null : array_values($params));
+		$result = $this->select($query, $params);
 		if (!empty($result)) {
-			return $result[0];
+			return iterator_to_array($result)[0];
 		}
 		return null;
 	}
@@ -252,9 +252,9 @@ abstract class Connection implements ConnectionInterface
 	 */
 	function selectValue($query, array $params = null)
 	{
-		$result = $this->exec($query, empty($params) ? null : array_values($params));
+		$result = $this->select($query, $params);
 		if (!empty($result)) {
-			list($value) = array_values($result[0]);
+			list($value) = array_values(iterator_to_array($result)[0]);
 			return $value;
 		}
 		return null;
